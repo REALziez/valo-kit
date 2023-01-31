@@ -13,6 +13,7 @@ import PlayerWeaponsPlugin from "../plugins/player-weapons.js";
 import PlayerWinRatePlugin from "../plugins/player-winrate.js";
 import SortByLevelPlugin from "../plugins/sort-by-level.js";
 import TeamSpacerPlugin from "../plugins/team-spacer.js";
+import DiscordRpcPlugin from "../plugins/discord-rpc.js";
 import { stripAnsiCodes } from "../utils/helpers/text.js";
 import { TablePluginManager } from "./plugin-manager.js";
 import { Table as ITable, TableContext } from "./types/table.js";
@@ -32,6 +33,7 @@ const pluginCtors = [
 	PlayerMatchesPlugin,
 	TeamSpacerPlugin,
 	SortByLevelPlugin,
+	DiscordRpcPlugin
 ];
 
 export class Table implements ITable {

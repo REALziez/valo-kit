@@ -11,3 +11,4 @@ plugins:
   player-matches: [2]
   team-spacer: true
   sort-by-level: true
+  discord-rpc: true
