@@ -8,7 +8,7 @@ plugins:
   player-peak-rank: [short]
   player-winrate: true
   player-level: true
-  player-matches: [2]
+  player-matches: [1]
   team-spacer: true
   sort-by-level: true
   discord-rpc: true

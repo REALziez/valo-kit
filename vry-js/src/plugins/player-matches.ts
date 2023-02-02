@@ -1,5 +1,6 @@
 import {
 	CoreGameMatchData,
+	PartyInfo,
 	PreGameMatchData,
 } from "@valo-kit/api-client/types";
 import chalk from "chalk";
@@ -12,8 +13,6 @@ import {
 } from "../table/types/plugin.js";
 import { Table } from "../table/types/table.js";
 
-const COLUMN_HEADER = "Prev Matches";
-
 export default class PlayerMatchesPlugin
 	extends TablePlugin
 	implements OnStateMenus, OnStatePreGame, OnStateInGame
@@ -23,7 +22,7 @@ export default class PlayerMatchesPlugin
 
 	private logger = this.table.getPluginLogger(this);
 
-	private numMatches = 2;
+	private numMatches = 1;
 
 	constructor(table: Table, flags?: string[]) {
 		super(table, flags);
@@ -44,41 +43,85 @@ export default class PlayerMatchesPlugin
 	}
 
 	async onStateMenus() {
-		const { api, presences } = this.table.context;
-		const players = api.helpers.getMyPartyPlayersPresences(presences);
+		const { partyInfo } = this.context;
+
+		const partyData = partyInfo as PartyInfo;
+		const players = partyData.Members;
+
 		const matchesResults = await Promise.all(
-			players.map(p => this.getHistory(p.puuid))
+			players.map(p => this.getHistory(p.Subject))
 		);
-		const results = matchesResults.map(it =>
-			it.map(r => formatMatchResult(r)).join(chalk.gray(" • "))
+		const results = matchesResults.map(
+			it =>
+				it
+					.map(r => {
+						if (it.length === 1 && r?.result && r.score) {
+							return `${formatMatchResult(r.result)} (${r.score.allyTeam}:${
+								r.score.enemyTeam
+							})`;
+						}
+						return formatMatchResult(r?.result);
+					})
+					.join(chalk.gray(" • ")) || chalk.gray(" • ")
 		);
-		return () => this.table.addColumn(COLUMN_HEADER, results);
+		return () => this.table.addColumn(this.getColumnHeader(), results);
 	}
 
 	async onStatePreGame() {
-		const { matchData } = this.table.context;
+		const { matchData } = this.context;
+
 		const preGameMatchData = matchData as PreGameMatchData;
 		const players = preGameMatchData.AllyTeam.Players;
+
 		const matchesResults = await Promise.all(
 			players.map(p => this.getHistory(p.Subject))
 		);
-		const results = matchesResults.map(it =>
-			it.map(r => formatMatchResult(r)).join(chalk.gray(" • "))
+		const results = matchesResults.map(
+			it =>
+				it
+					.map(r => {
+						if (it.length === 1 && r?.result && r.score) {
+							return `${formatMatchResult(r.result)} (${r.score.allyTeam}:${
+								r.score.enemyTeam
+							})`;
+						}
+						return formatMatchResult(r?.result);
+					})
+					.join(chalk.gray(" • ")) || chalk.gray(" • ")
 		);
-		return () => this.table.addColumn(COLUMN_HEADER, results);
+		return () => this.table.addColumn(this.getColumnHeader(), results);
 	}
 
 	async onStateInGame() {
-		const { matchData } = this.table.context;
+		const { matchData } = this.context;
+
 		const inGameMatchData = matchData as CoreGameMatchData;
 		const players = inGameMatchData.Players;
+
 		const matchesResults = await Promise.all(
 			players.map(p => this.getHistory(p.Subject))
 		);
-		const results = matchesResults.map(it =>
-			it.map(r => formatMatchResult(r)).join(chalk.gray(" • "))
+		const results = matchesResults.map(
+			it =>
+				it
+					.map(r => {
+						if (it.length === 1 && r?.result && r.score) {
+							return `${formatMatchResult(r.result)} (${r.score.allyTeam}:${
+								r.score.enemyTeam
+							})`;
+						}
+						return formatMatchResult(r?.result);
+					})
+					.join(chalk.gray(" • ")) || chalk.gray(" • ")
 		);
-		return () => this.table.addColumn(COLUMN_HEADER, results);
+		return () => this.table.addColumn(this.getColumnHeader(), results);
+	}
+
+	private getColumnHeader() {
+		if (this.numMatches === 1) {
+			return "Prev Match";
+		}
+		return "Prev Matches";
 	}
 
 	private async getHistory(puuid: string) {
@@ -100,7 +143,10 @@ export default class PlayerMatchesPlugin
 			.filter(res => res.status === "fulfilled")
 			.map(md => {
 				if (md.status === "fulfilled") {
-					return api.helpers.getPlayerResultForMatch(md.value, puuid);
+					return {
+						result: api.helpers.getPlayerResultForMatch(md.value, puuid),
+						score: api.helpers.getScoreForMatch(md.value, puuid),
+					};
 				}
 			});
 	}
